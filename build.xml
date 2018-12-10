@@ -1,0 +1,357 @@
+<?xml version="1.0"?>
+
+<!--
+   Licensed to the Apache Software Foundation (ASF) under one or more
+   contributor license agreements.  See the NOTICE file distributed with
+   this work for additional information regarding copyright ownership.
+   The ASF licenses this file to You under the Apache License, Version 2.0
+   (the "License"); you may not use this file except in compliance with
+   the License.  You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+   
+   By default, ant will compile the core engine and some built-in examples. 
+   The final output includes termite-core-0.1.jar and termite-examples-0.1.jar 
+   in the directory ${basedir}/build.
+-->
+
+<project name="hama" default="all.jar">
+	<property name="system" value="termite" />
+	<property name="version" value="0.1" />
+	<property name="year" value="2015" />
+	
+	<!-- names of output jar -->
+	<property name="core.name" value="${system}-core-${version}" />
+	<property name="examples.name" value="${system}-examples-${version}" />
+	<property name="examples.mainclass.name" value="hybridgraph/examples/driver/ExampleDriver" />
+
+	<!-- Load all the default properties, and any the user wants    -->
+	<!-- to contribute (without having to type -D or edit this file -->
+	<property file="${user.home}/${name}.build.properties" />
+	<property file="${basedir}/build.properties" />
+
+	<property name="src.dir" location="${basedir}/src/java" />
+	<property name="src.test" location="${basedir}/src/test" />
+	<property name="src.examples" location="${basedir}/src/examples" />
+
+	<property name="lib.dir" value="${basedir}/lib" />
+	<property name="conf.dir" value="${basedir}/conf" />
+	<property name="docs.dir" value="${basedir}/docs" />
+	<property name="docs.src" value="${basedir}/src/docs" />
+
+	<!-- build properties -->
+
+	<property name="test.output" value="no" />
+	<property name="test.timeout" value="600000" />
+
+	<property name="build.dir" location="${basedir}/build" />
+	<property name="build.lib" location="${build.dir}/lib" />
+	<property name="build.classes" location="${build.dir}/classes" />
+	<property name="build.test" location="${build.dir}/test" />
+	<property name="build.examples" location="${build.dir}/examples" />
+	<property name="build.docs" value="${build.dir}/docs/site" />
+	<property name="build.javadoc" value="${build.docs}/api" />
+	<property name="build.encoding" value="ISO-8859-1" />
+	<property name="build.src" value="${build.dir}/src" />
+
+	<property name="build.report" value="${build.dir}/reports" />
+	<property name="build.report.findbugs" value="${build.report}/findbugs" />
+	<property name="build.report.tests" value="${build.report}/tests" />
+
+	<property name="test.build.dir" value="${build.dir}/test" />
+	<property name="test.junit.output.format" value="plain" />
+	<property name="dist.dir" value="${build.dir}/${final.name}" />
+
+	<property name="javac.deprecation" value="off" />
+	<property name="javac.debug" value="on" />
+
+	<property name="javadoc.link.java" value="http://download.oracle.com/javase/6/docs/api/" />
+	<property name="javadoc.packages" value="org.apache.hama.*" />
+
+	<fileset id="lib.jars" dir="${basedir}" includes="lib/*.jar" />
+	<path id="classpath">
+		<fileset refid="lib.jars" />
+		<fileset dir="${lib.dir}/findbugs/">
+			<include name="*.jar" />
+		</fileset>
+		<pathelement location="${build.classes}" />
+		<pathelement location="${conf.dir}" />
+	</path>
+
+	<taskdef name="findbugs" classpathref="classpath" classname="edu.umd.cs.findbugs.anttask.FindBugsTask" />
+
+	<target name="init">
+		<mkdir dir="${build.dir}" />
+		<mkdir dir="${build.classes}" />
+		<mkdir dir="${build.test}" />
+		<mkdir dir="${build.examples}" />
+		<mkdir dir="${build.report.findbugs}" />
+		<mkdir dir="${build.report.tests}" />
+		<!--Copy bin, lib, and conf. too-->
+		<mkdir dir="${build.lib}" />
+		<copy todir="${build.lib}">
+			<fileset dir="${lib.dir}" />
+		</copy>
+		
+	    <tempfile property="touch.temp.file" destDir="${java.io.tmpdir}"/>
+	    <touch millis="0" file="${touch.temp.file}">
+	      <fileset dir="${conf.dir}" includes="**/*.template"/>
+	    </touch>
+	    <delete file="${touch.temp.file}"/>
+
+	    <copy todir="${conf.dir}" verbose="true">
+	      <fileset dir="${conf.dir}" includes="**/*.template"/>
+	      <mapper type="glob" from="*.template" to="*"/>
+	    </copy>
+		
+		<mkdir dir="${build.examples}/hybridgraph" />
+	</target>
+
+	<!-- ================================================================== -->
+	<!-- Java Compiler Compiler, generate Parsers                           -->
+	<!-- ================================================================== -->
+	
+	<target name="compile-core" depends="init">
+		<!-- Compile core java files -->
+		<mkdir dir="${build.src}" />
+		<javac encoding="${build.encoding}" srcdir="${src.dir};${build.src}" includes="**/*.java" destdir="${build.classes}" debug="${javac.debug}" deprecation="${javac.deprecation}" includeantruntime="false">
+			<classpath refid="classpath" />
+		</javac>
+	</target>
+	
+	<target name="compile-examples" depends="compile-core">
+		<javac encoding="${build.encoding}" srcdir="${src.examples}" includes="**/*.java" destdir="${build.examples}" debug="${javac.debug}" deprecation="${javac.deprecation}" includeantruntime="false">
+			<classpath refid="classpath" />
+		</javac>
+	</target>
+
+	<!-- Override jar target to specify main class -->
+	<target name="core.jar" depends="compile-core">
+		<jar jarfile="${build.dir}/${core.name}.jar" basedir="${build.classes}">
+		</jar>
+	</target>
+
+	<target name="examples.jar" depends="compile-examples" description="Make the examples jar.">
+		<jar jarfile="${build.dir}/${examples.name}.jar" basedir="${build.examples}">
+			<manifest>
+				<attribute name="Main-Class" value="${examples.mainclass.name}" />
+			</manifest>
+		</jar>
+	</target>
+	
+	<target name="all.jar" depends="core.jar,examples.jar" description="Make the core jar and examples jar.">
+	</target>
+
+	<target name="package" depends="core.jar,javadoc,examples.jar,compile-test" description="Build distribution">
+		<mkdir dir="${dist.dir}" />
+	    <mkdir dir="${dist.dir}/lib"/>
+	    <mkdir dir="${dist.dir}/bin"/>
+	    <mkdir dir="${dist.dir}/docs"/>
+	    <mkdir dir="${dist.dir}/docs/api"/>
+		
+		<copy todir="${dist.dir}" includeEmptyDirs="false" flatten="true">
+			<fileset dir="${build.dir}">
+				<include name="${core.name}.jar" />
+				<include name="${examples.name}.jar" />
+				<include name="${core.name}-test.jar" />
+			</fileset>
+		</copy>
+		
+	    <copy todir="${dist.dir}/bin">
+	      <fileset dir="bin"/>
+	    </copy>
+		
+	    <copy todir="${dist.dir}/conf">
+	      <fileset dir="${conf.dir}" excludes="**/*.template"/>
+	    </copy>
+		
+		<copy todir="${dist.dir}/lib">
+			<fileset dir="${build.lib}" />
+		</copy>
+		
+	    <copy todir="${dist.dir}/docs">
+	      <fileset dir="${build.docs}"/>
+	    </copy>
+		
+		<copy todir="${dist.dir}">
+			<fileset dir=".">
+				<include name="*.txt" />
+			</fileset>
+		</copy>
+	    <copy todir="${dist.dir}/" file="build.xml"/>
+		<copy todir="${dist.dir}/" file="pom.xml"/>
+		
+		<mkdir dir="${dist.dir}/src" />
+		<copy todir="${dist.dir}/src" includeEmptyDirs="true">
+			<fileset dir="src" excludes="**/*.template **/docs/build/**/*" />
+		</copy>
+		
+		
+	    <chmod perm="ugo+x" type="file" parallel="false">
+	        <fileset dir="${dist.dir}/bin"/>
+	    </chmod>
+	</target>
+
+	<!-- ================================================================== -->
+	<!-- Make release tarball                                               -->
+	<!-- ================================================================== -->
+	<macrodef name="macro_tar" description="Worker Macro for tar">
+		<attribute name="param.destfile" />
+		<element name="param.listofitems" />
+		<sequential>
+			<tar compression="gzip" longfile="gnu" destfile="@{param.destfile}">
+				<param.listofitems />
+			</tar>
+		</sequential>
+	</macrodef>
+	<target name="tar" depends="package" description="Make release tarball">
+		<macro_tar param.destfile="${build.dir}/${final.name}.tar.gz">
+			<param.listofitems>
+				<tarfileset dir="${build.dir}" mode="664">
+					<exclude name="${final.name}/bin/*" />
+					<include name="${final.name}/**" />
+				</tarfileset>
+				<tarfileset dir="${build.dir}" mode="755">
+					<include name="${final.name}/bin/*" />
+				</tarfileset>
+			</param.listofitems>
+		</macro_tar>
+	</target>
+
+	<target name="binary" depends="package" description="Make tarball without source and documentation">
+		<macro_tar param.destfile="${build.dir}/${final.name}-bin.tar.gz">
+			<param.listofitems>
+				<tarfileset dir="${build.dir}" mode="664">
+					<exclude name="${final.name}/bin/*" />
+					<exclude name="${final.name}/src/**" />
+					<exclude name="${final.name}/docs/**" />
+					<include name="${final.name}/**" />
+				</tarfileset>
+				<tarfileset dir="${build.dir}" mode="755">
+					<include name="${final.name}/bin/*" />
+				</tarfileset>
+			</param.listofitems>
+		</macro_tar>
+	</target>
+
+	<!-- ================================================================== -->
+	<!-- Doc                                                                -->
+	<!-- ================================================================== -->
+	<target name="docs" depends="forrest.check" description="Generate forrest-based documentation. To use, specify -Dforrest.home=&lt;base of Apache Forrest installation&gt; on the command line." if="forrest.home">
+		<exec dir="${docs.src}" executable="${forrest.home}/bin/forrest" failonerror="true">
+		</exec>
+		<copy todir="${build.docs}">
+			<fileset dir="${docs.src}/build/site/" />
+		</copy>
+		<delete dir="${docs.src}/build/" />
+	</target>
+
+	<target name="forrest.check" unless="forrest.home">
+		<fail message="'forrest.home' is not defined. Please pass -Dforrest.home=&lt;base of Apache Forrest installation&gt; to Ant on the command-line." />
+	</target>
+
+	<!-- javadoc-classpath -->
+	<!-- This is going to stay back until we use a mechanism for automatic dependency management -->
+	<path id="javadoc-classpath">
+		<fileset file="${lib.dir}/hadoop*.jar" />
+		<fileset file="${lib.dir}/zookeeper*.jar" />
+		<fileset file="${lib.dir}/commons*.jar" />
+		<fileset file="${lib.dir}/log4j*.jar" />
+		<fileset file="${lib.dir}/junit-3.8.1.jar" />
+	</path>
+
+	<!-- Javadoc -->
+	<target name="javadoc" description="Generate javadoc">
+		<mkdir dir="${build.javadoc}" />
+		<javadoc overview="${src.dir}/overview.html" packagenames="org.apache.hama.*" destdir="${build.javadoc}" author="true" version="true" use="true" windowtitle="${Name} ${version} API" doctitle="${Name} ${version} API" bottom="Copyright &amp;copy; ${year} The Apache Software Foundation">
+			<packageset dir="${src.dir}">
+				<include name="org/apache/**" />
+			</packageset>
+			<link href="${javadoc.link.java}" />
+			<classpath>
+				<path refid="javadoc-classpath" />
+			</classpath>
+			<group title="${Name}" packages="org.apache.hama.*" />
+		</javadoc>
+	</target>
+
+	<!-- Javadoc with UML diagrams -->
+	<target name="javadocs" depends="compile-core">
+		<javadoc sourcepath="${src.dir}" packagenames="org.apache.hama.*" destdir="${build.javadoc}" private="true">
+			<doclet name="org.umlgraph.doclet.UmlGraphDoc" path="${lib.dir}/UmlGraph.jar">
+				<param name="-inferrel" />
+				<param name="-inferdep" />
+				<param name="-hide" value="java.*" />
+				<param name="-collpackages" value="java.util.*" />
+				<param name="-qualify" />
+				<param name="-postfixpackage" />
+				<param name="-nodefontsize" value="9" />
+				<param name="-nodefontpackagesize" value="7" />
+				<param name="-link" value="http://download.oracle.com/javase/1.6.0/docs/guide/javadoc/doclet/spec/" />
+				<param name="-link" value="http://download.oracle.com/javase/1.6/docs/api" />
+			</doclet>
+		</javadoc>
+	</target>
+
+	<!-- ================================================================== -->
+	<!-- Run unit tests                                                     -->
+	<!-- ================================================================== -->
+	<path id="test.classpath">
+		<pathelement location="${conf.dir}" />
+		<pathelement location="${src.test}" />
+		<pathelement location="${build.test}" />
+		<path refid="classpath" />
+		<pathelement location="${build.dir}" />
+	</path>
+
+	<target name="compile-test" depends="compile-core">
+		<javac encoding="${build.encoding}" srcdir="${src.test}" includes="**/*.java" destdir="${build.test}" debug="${javac.debug}" includeantruntime="false">
+			<classpath refid="test.classpath" />
+		</javac>
+		<jar jarfile="${build.dir}/${final.name}-test.jar">
+			<fileset dir="${build.test}" includes="org/**" />
+			<fileset dir="${build.classes}" />
+			<fileset dir="${src.test}" includes="**/*.properties" />
+			<manifest>
+				<attribute name="Main-Class" value="org/apache/hama/Utils" />
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="test" depends="compile-core, compile-test">
+		<junit printsummary="yes" showoutput="${test.output}" haltonfailure="no" fork="yes" maxmemory="512m" errorProperty="tests.failed" failureProperty="tests.failed" timeout="${test.timeout}">
+			<classpath refid="test.classpath" />
+			<formatter type="${test.junit.output.format}" />
+			<batchtest todir="${build.report.tests}" unless="testcase">
+				<fileset dir="${src.test}" includes="**/Test*.java" excludes="**/${test.exclude}.java" />
+			</batchtest>
+			<batchtest todir="${build.report.tests}" if="testcase">
+				<fileset dir="${src.test}" includes="**/${testcase}.java" excludes="**/${test.exclude}.java" />
+			</batchtest>
+		</junit>
+		<fail if="tests.failed">Tests failed!</fail>
+	</target>
+
+	<target name="findbugs" depends="init, core.jar">
+		<findbugs home="${lib.dir}/findbugs" output="xml" outputFile="${build.report.findbugs}/hama-findbugs.xml" excludeFilter="${conf.dir}/findbugs-exclude-filter.xml" auxClasspathRef="classpath">
+			<sourcePath path="${src.dir}" />
+			<class location="${build.dir}/${final.name}.jar" />
+		</findbugs>
+	</target>
+
+	<target name="report" depends="findbugs,test">
+	</target>
+
+	<!-- ================================================================== -->
+	<!-- Clean.  Delete the build files, and their directories              -->
+	<!-- ================================================================== -->
+	<target name="clean">
+		<delete dir="${build.dir}" />
+	</target>
+</project>
