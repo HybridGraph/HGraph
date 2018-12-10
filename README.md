@@ -8,6 +8,7 @@
 **[04/05/2017]** Some engineering optimizations are added for better performance.  
 **[02/17/2017]** Some APIs are changed.  
 **[12/25/2016]** Code cleanup.  
+**[05/15/2016]** HybridGraph is online.  
 
 # HGraph
 HGraph(HybridGraph) is a Pregel-like system which merges Pulling/Pushing for I/O-Efficient distributed and iterative graph computing.
