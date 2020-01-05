@@ -1,5 +1,5 @@
 **News!!!**
-
+**[10/30/2019]** A new paper is accepted by IEEE TKDE!!!
 **[12/10/2018]** We change the project name from **HybridGraph** to **HGraph** for short!!!  
 **[11/20/2018]** Priority scheduling for `BPull` is now available.   
 **[10/20/2018]** More example graph algorithms are packaged.   
@@ -131,6 +131,7 @@ By default, all parts will be built, and you can find `termite-core-0.1.jar` and
 HGraph includes some simple graph algorithms to show the usage of its APIs. These algorithms are contained in the `src/examples/hybrid/examples` package and have been packaged into the `termite-examples-0.1.jar` file. Users can implement their own algorithms by learning these examples. After that, as described in Section 3 and Section 2.4, you can build your own algorithm can then run it.  
 
 ## 6. Publications
+* Zhigang Wang, Yu Gu*, Yubin Bao, Ge Yu, Jeffrey Xu Yu, Zhiqiang Wei*. [HGraph: I/O-efficient Distributed and Iterative Graph Computing by Hybrid Pushing/Pulling](https://ieeexplore.ieee.org/document/8890918), IEEE TKDE, 2019, accepted (extended version of SIGMOD'16) 
 
 * Zhigang Wang, Lixin Gao, Yu Gu, Yubin Bao, Ge Yu. [A Fault-Tolerant Framework for Asynchronous Iterative Computations in Cloud Environments](https://ieeexplore.ieee.org/document/8300647), IEEE TPDS 2018 (extended version of SoCC'16). 
 
