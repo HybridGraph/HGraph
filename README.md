@@ -1,5 +1,5 @@
 **News!!!**   
-**[10/30/2019]** A new paper is accepted by IEEE TKDE!!!
+**[10/30/2019]** A new paper is accepted by IEEE TKDE!!!   
 **[12/10/2018]** We change the project name from **HybridGraph** to **HGraph** for short!!!  
 **[11/20/2018]** Priority scheduling for `BPull` is now available.   
 **[10/20/2018]** More example graph algorithms are packaged.   
